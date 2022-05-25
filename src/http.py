@@ -41,6 +41,9 @@ class Connection:
     def get_studies_page(self) -> str:
         return self.get_content("study-s.php.cs")
 
+    def get_courses_document_repository_page(self) -> str:
+        return self.get_content("cfs.php.cs")
+
     def get_courses_page(self, study: int = 1) -> str:
         assert study > 0
         return self.get_content("study-a.php.cs", cist=study)

@@ -4,6 +4,9 @@ class Course:
     def __init__(self, course_abbr: str, course_link: str):
         self.abbr = course_abbr
         self.link = course_link
+    
+    def __str__(self) -> str:
+        return f"Course(abbr='{self.abbr}',link='{self.link}')"
 
 
 class CourseTask:

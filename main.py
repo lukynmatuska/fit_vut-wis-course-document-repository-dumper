@@ -13,7 +13,7 @@ def main(output_dir: Path):
 
 
 if __name__ == '__main__':
-    default_dir = f"{os.getcwd()}/wis_projects"
+    default_dir = f"{os.getcwd()}/wis_document_repositories"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", action="store", dest="output_dir", metavar="OUTPUT_DIR", default=default_dir)

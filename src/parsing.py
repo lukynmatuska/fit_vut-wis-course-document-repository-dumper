@@ -8,6 +8,12 @@ class Parser:
     def __init__(self, page_content: str):
         self.content = BeautifulSoup(page_content, "html5lib")
 
+class DocumentRepositoryParser(Parser):
+
+    def get_course_names_and_links(self) -> Generator[tuple[str, str], None, None]:
+        course_entries = self.content.select(".table-holder > table > tbody > tr[valign='middle']")
+        for entry in course_entries:
+            yield "{} - {}".format(entry.find_all("td")[3].text, entry.find_all("td")[4].text), entry.find_all("a")[1]["href"]
 
 class StudyParser(Parser):
 

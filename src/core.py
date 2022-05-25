@@ -9,7 +9,7 @@ from requests import HTTPError
 from .http import Connection
 from .io import get_user_credentials
 from .objects import Course, CourseTask, TaskFile
-from .parsing import StudyParser, CourseParser, TaskParser, TaskFilesParser
+from .parsing import StudyParser, CourseParser, TaskParser, TaskFilesParser, DocumentRepositoryParser
 
 log = logging.getLogger("core")
 
@@ -20,6 +20,12 @@ class Downloader:
 
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir
+
+    def _get_courses_from_document_respository(self) -> Generator[Course, None, None]:
+        assert self.connection is not None
+        page_content = self.connection.get_courses_document_repository_page()
+        for course_abbr, course_link in DocumentRepositoryParser(page_content).get_course_names_and_links():
+            yield Course(course_abbr, course_link)
 
     def _get_courses(self, study_id: int) -> Generator[Course, None, None]:
         assert self.connection is not None
@@ -43,6 +49,17 @@ class Downloader:
         page_content = self.connection.get_content(course_files_link)
         for file_name, file_year, file_link in TaskFilesParser(page_content).get_file_names_and_links():
             yield TaskFile(file_name, file_year, file_link, task)
+
+    def _explore_course_in_document_repository(self, course: Course):
+        log.info("exploring course in document repository %s", course.abbr)
+        files_downloaded = 0
+        for task in self._get_course_tasks(course):
+            files_downloaded += self._download_files_from_course_task(task)
+
+        if not files_downloaded:
+            log.info("found no project files in %s", course.abbr)
+        else:
+            log.debug("found and downloaded %d file(s) from %s", files_downloaded, course.abbr)
 
     def _explore_course(self, course: Course):
         log.info("exploring course %s", course.abbr)
@@ -106,9 +123,14 @@ class Downloader:
 
         self._setup_connection()
         self._prepare_output()
-        self._explore_studies()
+        self._explore_courses_in_repository()
 
         self.connection.close()
+
+    def _explore_courses_in_repository(self):
+        log.info("exploring courses in documents repository")
+        for course in self._get_courses_from_document_respository():
+            print(course)
 
     def _explore_studies(self):
         for study_id in range(1, 6):
